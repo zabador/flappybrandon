@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.zabador.flappybrandon;
 
 import android.app.Activity;
@@ -18,20 +15,16 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.zabador.model.Entity;
-import com.zabador.model.components.Speed;
 
-/**
- * @author impaler
- * This is the main surface that handles the ontouch events and draws
- * the image to the screen.
- */
+import java.util.Random;
+
 public class MainGamePanel extends SurfaceView implements
 		SurfaceHolder.Callback {
 
 	private static final String TAG = MainGamePanel.class.getSimpleName();
 	
 	private MainThread thread;
-	private Entity brandon;
+	private Entity brandon, bottonPipe, topPipe;
     private Context context;
     private WindowManager wm;
     private Display display;
@@ -39,6 +32,10 @@ public class MainGamePanel extends SurfaceView implements
     private int width;
     private int height;
     private int actionBarHeight;
+    private int brandonMovement;
+    private int pipeMovement;
+    private final int GAP = 250;
+    private boolean gameStarted;
 
 	public MainGamePanel(Context context) {
 		super(context);
@@ -55,18 +52,29 @@ public class MainGamePanel extends SurfaceView implements
         }        display.getSize(size);
 
         this.width = size.x;
-        this.height = size.y - actionBarHeight * 2;
-        // Calculate ActionBar height
+        this.height = size.y - actionBarHeight;
+
+        gameStarted = false;
+
+        // create the game loop thread
+        thread = new MainThread(getHolder(), this);
 
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
 
 		// create brandon and load bitmap
-		brandon = new Entity(BitmapFactory.decodeResource(getResources(), R.drawable.brandonup), 50, 50);
-		
-		// create the game loop thread
-		thread = new MainThread(getHolder(), this);
-		
+        this.brandonMovement = 15;
+		brandon = new Entity(BitmapFactory.decodeResource(getResources(), R.drawable.brandonup), 100, 500, 0, 0);
+
+        // set up the pipes
+        Bitmap pipes = BitmapFactory.decodeResource(context.getResources(),R.drawable.pipe);
+        Bitmap scaledPipes = Bitmap.createScaledBitmap(pipes, 100, height - GAP, true);
+        this.pipeMovement = -15;
+        topPipe = new Entity(scaledPipes, width + 500, 200, pipeMovement, 0);
+        bottonPipe = new Entity(scaledPipes, width + 500,
+                topPipe.getY() + topPipe.getBitmap().getHeight() + GAP, pipeMovement, 0);
+
+
 		// make the GamePanel focusable so it can handle events
 		setFocusable(true);
 	}
@@ -89,6 +97,7 @@ public class MainGamePanel extends SurfaceView implements
 		Log.d(TAG, "Surface is being destroyed");
 		// tell the thread to shut down and wait for it to finish
 		// this is a clean shutdown
+        thread.setRunning(false);
 		boolean retry = true;
 		while (retry) {
 			try {
@@ -103,31 +112,13 @@ public class MainGamePanel extends SurfaceView implements
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+        Log.i(TAG, "onTouchEvent");
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			// delegating event handling to the brandon
-			brandon.handleActionDown((int) event.getX(), (int) event.getY());
-			
-			// check if in the lower part of the screen we exit
-			if (event.getY() > getHeight() - 50) {
-				thread.setRunning(false);
-				((Activity)getContext()).finish();
-			} else {
-				Log.d(TAG, "Coords: x=" + event.getX() + ",y=" + event.getY());
-			}
-		} if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			// the gestures
-			if (brandon.isTouched()) {
-				// the brandon was picked up and is being dragged
-				brandon.setX((int)event.getX());
-				brandon.setY((int)event.getY());
-            }
+            Log.i(TAG, "action down");
+            brandonMovement = -35;
+            gameStarted = true;
+        }
 
-		} if (event.getAction() == MotionEvent.ACTION_UP) {
-			// touch was released
-			if (brandon.isTouched()) {
-				brandon.setTouched(false);
-			}
-		}
 		return true;
 	}
 
@@ -135,8 +126,15 @@ public class MainGamePanel extends SurfaceView implements
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),R.drawable.background);
         Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
 
-        canvas.drawBitmap(scaledBitmap, 0, 0, null);
-		brandon.draw(canvas);
+        try {
+            canvas.drawBitmap(scaledBitmap, 0, 0, null);
+            brandon.draw(canvas);
+            topPipe.draw(canvas);
+            bottonPipe.draw(canvas);
+        }catch(Exception e) {
+            // TODO stop thread gracefully
+        }
+
 	}
 
 	/**
@@ -146,23 +144,51 @@ public class MainGamePanel extends SurfaceView implements
 	 */
 	public void update() {
 		// check collision with right wall if heading right
-		if (brandon.getSpeed().getxDirection() == Speed.DIRECTION_RIGHT
-				&& brandon.getX() + brandon.getBitmap().getWidth() / 2 >= width) {
-		}
-		// check collision with left wall if heading left
-		if (brandon.getSpeed().getxDirection() == Speed.DIRECTION_LEFT
-				&& brandon.getX() - brandon.getBitmap().getWidth() / 2 <= 0) {
-		}
-		// check collision with bottom wall if heading down
-		if (brandon.getSpeed().getyDirection() == Speed.DIRECTION_DOWN
-				&& brandon.getY() + brandon.getBitmap().getHeight() / 2 >= height) {
-		}
-		// check collision with top wall if heading up
-		if (brandon.getSpeed().getyDirection() == Speed.DIRECTION_UP
-				&& brandon.getY() - brandon.getBitmap().getHeight() / 2 <= 0) {
-		}
-		// Update the lone brandon
-		brandon.update();
+//		if (brandon.getX() + brandon.getBitmap().getWidth() / 2 >= width)
+//		// check collision with left wall if heading left
+//		if (brandon.getX() - brandon.getBitmap().getWidth() / 2 <= 0)
+//		// check collision with bottom wall if heading down
+//		if (brandon.getY() + brandon.getBitmap().getHeight() / 2 >= height)
+//		// check collision with top wall if heading up
+//	    if (brandon.getY() - brandon.getBitmap().getHeight() / 2 <= 0) {
+
+        if (gameStarted) {
+            brandonMovement = brandonMovement + 4;
+            if (brandonMovement >= 0) {
+                brandon.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.brandondown));
+            }
+            else {
+                brandon.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.brandonup));
+            }
+            if (brandonMovement > 30) {
+                brandonMovement = 30;
+            }
+            brandon.setYv(brandonMovement);
+
+            brandon.update();
+
+            if (bottonPipe.getX() <= 0) {
+                redrawPipes();
+            }
+            bottonPipe.update();
+            topPipe.update();
+
+        }
 	}
+
+    public void redrawPipes() {
+        Random randomY = new Random();
+
+        int y = randomY.nextInt(height - 500);
+        bottonPipe.setX(width + bottonPipe.getBitmap().getWidth());
+        topPipe.setX(width + topPipe.getBitmap().getWidth());
+        topPipe.setY(y - topPipe.getBitmap().getHeight() + 450);
+        bottonPipe.setY(topPipe.getY() + topPipe.getBitmap().getHeight() + GAP);
+
+        Log.i(TAG, "bottom pipe = " + bottonPipe.getY());
+        Log.i(TAG, "random y = " + y);
+        Log.i(TAG, "top pipe height = " + topPipe.getBitmap().getHeight());
+    }
+
 
 }
