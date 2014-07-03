@@ -6,17 +6,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import org.androidannotations.annotations.EActivity;
+
+@EActivity(R.layout.activity_start)
 public class StartActivity extends Activity {
 
-    private final String TAG = "FLappyBrandon";
-    private int homePage;
+    private final String TAG = StartActivity.class.getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        homePage = R.layout.activity_start;
-        setContentView(homePage);
-
     }
 
     public void start(View view) {

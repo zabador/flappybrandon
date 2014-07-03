@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pre-dex-items>
+
+    <item
+        dex="/Users/schneis/p/android/flappybrandon/app/build/intermediates/pre-dexed/debug/androidannotations-api-3.0.1-7152f741f24e9613b2ad9dca1addde772f75d521.jar"
+        jar="/Users/schneis/.gradle/caches/modules-2/files-2.1/org.androidannotations/androidannotations-api/3.0.1/beb7e0a75c753383e7ef68c0e1639999db301c33/androidannotations-api-3.0.1.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="beb7e0a75c753383e7ef68c0e1639999db301c33"/>
+
+</pre-dex-items>

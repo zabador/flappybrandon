@@ -36,6 +36,7 @@ public class MainGamePanel extends SurfaceView implements
     private int pipeMovement;
     private final int GAP = 250;
     private boolean gameStarted;
+    private CollisionDetector cd;
 
 	public MainGamePanel(Context context) {
 		super(context);
@@ -53,6 +54,7 @@ public class MainGamePanel extends SurfaceView implements
 
         this.width = size.x;
         this.height = size.y - actionBarHeight;
+
 
         gameStarted = false;
 
@@ -75,6 +77,7 @@ public class MainGamePanel extends SurfaceView implements
                 topPipe.getY() + topPipe.getBitmap().getHeight() + GAP, pipeMovement, 0);
 
 
+        this.cd = new CollisionDetector(brandon, topPipe, bottonPipe);
 		// make the GamePanel focusable so it can handle events
 		setFocusable(true);
 	}
@@ -143,6 +146,9 @@ public class MainGamePanel extends SurfaceView implements
 	 * engine's update method.
 	 */
 	public void update() {
+
+        if(cd.collision())
+            Log.d(TAG, "collision detected");
 		// check collision with right wall if heading right
 //		if (brandon.getX() + brandon.getBitmap().getWidth() / 2 >= width)
 //		// check collision with left wall if heading left
