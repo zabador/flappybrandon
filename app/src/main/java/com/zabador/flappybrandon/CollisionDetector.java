@@ -24,8 +24,8 @@ public class CollisionDetector {
         brandon = b;
         pipeTop = pt;
         pipeBottom = pb;
-        halfBrandonWidth = b.getBitmap().getWidth()/2;
-        halfBrandonHeight = b.getBitmap().getHeight()/2;
+        halfBrandonWidth = (b.getBitmap().getWidth()/2) - 10;
+        halfBrandonHeight = (b.getBitmap().getHeight()/2) - 10;
         halfPipeWidth = pt.getBitmap().getWidth()/2;
         halfPipeHeight = pt.getBitmap().getHeight()/2;
     }

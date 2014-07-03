@@ -147,8 +147,10 @@ public class MainGamePanel extends SurfaceView implements
 	 */
 	public void update() {
 
-        if(cd.collision())
-            Log.d(TAG, "collision detected");
+        if(cd.collision()) {
+            thread.setRunning(false);
+            gameStarted = false;
+        }
 		// check collision with right wall if heading right
 //		if (brandon.getX() + brandon.getBitmap().getWidth() / 2 >= width)
 //		// check collision with left wall if heading left
