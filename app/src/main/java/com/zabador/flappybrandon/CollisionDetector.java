@@ -17,10 +17,11 @@ public class CollisionDetector {
     private int halfBrandonHeight;
     private int halfPipeWidth;
     private int halfPipeHeight;
+    private int screenHeight;
 
 
 
-    public CollisionDetector(Entity b, Entity pt, Entity pb) {
+    public CollisionDetector(Entity b, Entity pt, Entity pb, int screenHeight) {
         brandon = b;
         pipeTop = pt;
         pipeBottom = pb;
@@ -28,6 +29,7 @@ public class CollisionDetector {
         halfBrandonHeight = (b.getBitmap().getHeight()/2) - 10;
         halfPipeWidth = pt.getBitmap().getWidth()/2;
         halfPipeHeight = pt.getBitmap().getHeight()/2;
+        this.screenHeight = screenHeight;
     }
 
     public boolean collision() {
@@ -51,6 +53,9 @@ public class CollisionDetector {
             else if (brandonBottom >= pipeBottomTop)
                 return true;
         }
+
+        if(brandonTop <= 0 || brandonBottom >= screenHeight)
+            return true;
 
         return false;
     }

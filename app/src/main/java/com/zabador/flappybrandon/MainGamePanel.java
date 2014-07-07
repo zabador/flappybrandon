@@ -5,7 +5,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
@@ -14,6 +18,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import com.zabador.App;
 import com.zabador.model.Entity;
 
 import java.util.Random;
@@ -35,8 +40,11 @@ public class MainGamePanel extends SurfaceView implements
     private int brandonMovement;
     private int pipeMovement;
     private final int GAP = 250;
-    private boolean gameStarted;
+    private boolean gameStarted, gameOver;
     private CollisionDetector cd;
+    private int score = 0;
+    private Paint paint;
+    private final float TEXTSIZE = 50.0f;
 
 	public MainGamePanel(Context context) {
 		super(context);
@@ -44,6 +52,11 @@ public class MainGamePanel extends SurfaceView implements
         this.size = new Point();
 
         this.wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
+        this.paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(getDPFromPixels(TEXTSIZE));
+
         this.display = wm.getDefaultDisplay();
 
         TypedValue tv = new TypedValue();
@@ -57,6 +70,7 @@ public class MainGamePanel extends SurfaceView implements
 
 
         gameStarted = false;
+        gameOver = false;
 
         // create the game loop thread
         thread = new MainThread(getHolder(), this);
@@ -77,7 +91,7 @@ public class MainGamePanel extends SurfaceView implements
                 topPipe.getY() + topPipe.getBitmap().getHeight() + GAP, pipeMovement, 0);
 
 
-        this.cd = new CollisionDetector(brandon, topPipe, bottonPipe);
+        this.cd = new CollisionDetector(brandon, topPipe, bottonPipe, height);
 		// make the GamePanel focusable so it can handle events
 		setFocusable(true);
 	}
@@ -134,6 +148,16 @@ public class MainGamePanel extends SurfaceView implements
             brandon.draw(canvas);
             topPipe.draw(canvas);
             bottonPipe.draw(canvas);
+            canvas.drawText("Score: " + score, 15, 50, paint);
+            if(gameOver) {
+                Paint gameOver = new Paint();
+                gameOver.setColor(Color.RED);
+                gameOver.setTextSize(getDPFromPixels(100.0f));
+                gameOver.setTextAlign(Paint.Align.CENTER);
+
+                RectF bounds = new RectF(0, 0, width, height);
+                canvas.drawText("Game Over", bounds.centerX(), bounds.centerY(), gameOver);
+            }
         }catch(Exception e) {
             // TODO stop thread gracefully
         }
@@ -149,8 +173,11 @@ public class MainGamePanel extends SurfaceView implements
 
         if(cd.collision()) {
             thread.setRunning(false);
-            gameStarted = false;
+            gameOver = true;
+            if(score > App.getScore())
+                App.saveScore(score);
         }
+
 		// check collision with right wall if heading right
 //		if (brandon.getX() + brandon.getBitmap().getWidth() / 2 >= width)
 //		// check collision with left wall if heading left
@@ -160,7 +187,7 @@ public class MainGamePanel extends SurfaceView implements
 //		// check collision with top wall if heading up
 //	    if (brandon.getY() - brandon.getBitmap().getHeight() / 2 <= 0) {
 
-        if (gameStarted) {
+        if (gameStarted && !gameOver) {
             brandonMovement = brandonMovement + 4;
             if (brandonMovement >= 0) {
                 brandon.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.brandondown));
@@ -176,6 +203,7 @@ public class MainGamePanel extends SurfaceView implements
             brandon.update();
 
             if (bottonPipe.getX() <= 0) {
+                score++;
                 redrawPipes();
             }
             bottonPipe.update();
@@ -196,6 +224,22 @@ public class MainGamePanel extends SurfaceView implements
         Log.i(TAG, "bottom pipe = " + bottonPipe.getY());
         Log.i(TAG, "random y = " + y);
         Log.i(TAG, "top pipe height = " + topPipe.getBitmap().getHeight());
+    }
+    public float getDPFromPixels(float pixels) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+        switch(metrics.densityDpi){
+            case DisplayMetrics.DENSITY_LOW:
+                pixels = pixels * 0.75f;
+                break;
+            case DisplayMetrics.DENSITY_MEDIUM:
+                //pixels = pixels * 1.0f;
+                break;
+            case DisplayMetrics.DENSITY_HIGH:
+                pixels = pixels * 1.5f;
+                break;
+        }
+        return pixels;
     }
 
 
