@@ -45,11 +45,14 @@ public class MainGamePanel extends SurfaceView implements
     private int score = 0;
     private Paint paint;
     private final float TEXTSIZE = 50.0f;
+    private SoundHelper sh;
 
 	public MainGamePanel(Context context) {
 		super(context);
         this.context = context;
         this.size = new Point();
+        this.sh = new SoundHelper(context);
+        sh.dia();
 
         this.wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
@@ -134,6 +137,8 @@ public class MainGamePanel extends SurfaceView implements
             Log.i(TAG, "action down");
             brandonMovement = -35;
             gameStarted = true;
+            if(!gameOver)
+                sh.flap();
         }
 
 		return true;
@@ -174,6 +179,7 @@ public class MainGamePanel extends SurfaceView implements
         if(cd.collision()) {
             thread.setRunning(false);
             gameOver = true;
+            sh.howembarrasing();
             if(score > App.getScore())
                 App.saveScore(score);
         }
@@ -203,6 +209,7 @@ public class MainGamePanel extends SurfaceView implements
             brandon.update();
 
             if (bottonPipe.getX() <= 0) {
+                sh.ding();
                 score++;
                 redrawPipes();
             }
